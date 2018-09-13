@@ -63,6 +63,15 @@ Extending contrail ip-fabric features contrail will be able to support Mesos-DNS
 
 # 4. Implementation
 
+### 4.1 Contrail CNI
+Mesos agent would invoke contrail CNI when custom/host network provider is mentioned in the task description. CNI would parse all argument provided and pass required info to contrail's mesos manager. CNI would then poll contrail agent for ip address and mac info and create a tap interface in container.
+
+### 4.2 Mesos Manager
+Mesos manager would receive information from CNI regarding task/pod and accordingly inform information using contrail api's to contrail controller. Information includes network in which task.pod should be assigned, allocate a public ip/floating ip and security group to be assigned to.
+
+### 4.3 DNS and load balancer
+Mesos DNS and Mesos marathon lb would running as part of contrail network so that resolved ip address can be reached out via contrails vrouter.
+
 
 # 5. Performance and scaling impact
 Nothing so far.
@@ -76,6 +85,15 @@ Not applicable.
 # 8. Dependencies
 
 # 9. Debugging
+
+#### Task IP address:
+```shell
+>dcos task --all 
+NAME                      HOST            USER  STATE  ID              MESOS ID          REGION  ZONE
+webserver             192.168.65.111  root    R    webserver.60d0d31d-b605-11e8-916c-70b3d5800001   2275bb07-f40c-4d1e-884a-3d1332aed113-S4   ---    ---
+webserver             192.168.65.121  root    R    webserver.60ce621c-b605-11e8-916c-70b3d5800001   2275bb07-f40c-4d1e-884a-3d1332aed113-S5   ---    ---
+webserver          
+```
 
 # 10. Testing
 ## 10.1 Unit tests

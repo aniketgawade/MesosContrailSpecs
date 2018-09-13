@@ -10,10 +10,10 @@ Mesos containerized infrastructure has lowest elements as Application (group of 
 # 3. Proposed solution
 Currently Mesos Marathon framework leverages custom network provider for differnt network providers. We we use this to insert contrail as networking components in the traditional mesos infrastructure. Contrail will bring in its features like virtual ips, load balancer, network isolation, security and policy based routing.
 
-### 3.1 Contrail as Network and IPAM provider
+### Contrail as Network and IPAM provider
 Contrail will assign IP's to task and pods also release when required. Contrail will plumb task and pods into its networking components and would help route packets according to 
 
-### 3.2 Task/Pod network assignment
+### 3.1 Task/Pod network assignment
 As per the the task request Task or Pod will be assigned to the designated network and will attach provided ip or ip from the subnet range.
 
 ```yaml
@@ -28,7 +28,7 @@ As per the the task request Task or Pod will be assigned to the designated netwo
   }
 ```
 
-### 3.3 Public/floating ip
+### 3.2 Public/floating ip
 As per the request a task or pod can be allocated a public ip from the public network you can also mention which ip to allocate from the public ip network subnet range.
 ```yaml
   "ipAddress": {
@@ -43,7 +43,7 @@ As per the request a task or pod can be allocated a public ip from the public ne
   }
 ```  
 
-### 3.4 Assigning security group on interface
+### 3.3 Assigning security group on interface
 An interface can be assign with a requested security group.
 ```yaml
   "ipAddress": {
@@ -58,33 +58,30 @@ An interface can be assign with a requested security group.
   }
 ```  
 
+### 3.4 Load balancer and DNS support
+Extending contrail ip-fabric features contrail will be able to support Mesos-DNS and Marathon-lb &/ dcos-layer4-lb.
+
 # 4. Implementation
-## 4.1 Work items
-#### Describe changes needed for different components such as Controller, Analytics, Agent, UI. 
-#### Add subsections as needed.
+
 
 # 5. Performance and scaling impact
-## 5.1 API and control plane
-#### Scaling and performance for API and control plane
-
-## 5.2 Forwarding performance
-#### Scaling and performance for API and forwarding
+Nothing so far.
 
 # 6. Upgrade
-#### Describe upgrade impact of the feature
-#### Schema migration/transition
+Not applicable.
 
 # 7. Deprecations
-#### If this feature deprecates any older feature or API then list it here.
+Not applicable.
 
 # 8. Dependencies
-#### Describe dependent features or components.
 
-# 9. Testing
-## 9.1 Unit tests
-## 9.2 Dev tests
-## 9.3 System tests
+# 9. Debugging
 
-# 10. Documentation Impact
+# 10. Testing
+## 10.1 Unit tests
+## 10.2 Dev tests
+## 10.3 System tests
 
-# 11. References
+# 11. Documentation Impact
+
+# 12. References

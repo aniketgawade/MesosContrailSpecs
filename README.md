@@ -87,12 +87,15 @@ Not applicable.
 # 9. Debugging
 
 #### Task IP address:
+Curl to master ip to get status of all pods and apps.
 ```shell
->dcos task --all 
-NAME                      HOST            USER  STATE  ID              MESOS ID          REGION  ZONE
-webserver             192.168.65.111  root    R    webserver.60d0d31d-b605-11e8-916c-70b3d5800001   2275bb07-f40c-4d1e-884a-3d1332aed113-S4   ---    ---
-webserver             192.168.65.121  root    R    webserver.60ce621c-b605-11e8-916c-70b3d5800001   2275bb07-f40c-4d1e-884a-3d1332aed113-S5   ---    ---
-webserver          
+curl http://{MASTER_IP}/marathon/v2/apps
+curl http://{MASTER_IP}/marathon/v2/pods  
+```
+
+You can also use dcos cli to retrive status.
+```shell
+dcos marathon app list --json
 ```
 
 # 10. Testing

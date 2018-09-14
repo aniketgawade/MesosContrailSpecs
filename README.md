@@ -86,7 +86,6 @@ Not applicable.
 
 # 9. Debugging
 
-#### Task IP address:
 Curl to master ip to get status of all pods and apps.
 ```shell
 curl http://{MASTER_IP}/marathon/v2/apps

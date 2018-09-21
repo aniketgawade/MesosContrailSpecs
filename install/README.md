@@ -49,7 +49,9 @@ EOF
 
 Configure parameters in you genconf/config.yaml then run following:
 ```bash
-curl -O https://downloads.dcos.io/dcos/stable/dcos_generate_config.sh 
+Tested:
+wget https://downloads.dcos.io/dcos/stable/1.11.0/dcos_generate_config.sh
+//Latest: curl -O https://downloads.dcos.io/dcos/stable/dcos_generate_config.sh 
 sudo bash dcos_generate_config.sh    
 sudo docker run -d -p 80:80 -v $PWD/genconf/serve:/usr/share/nginx/html:ro nginx
 ```
@@ -114,7 +116,3 @@ journalctl -u dcos-exhibitor -b
 journalctl -u dcos-mesos-dns -b
 journalctl -flu dcos-spartan
 ```
-
-
-
-

@@ -11,6 +11,44 @@ For DCOS you need minimum of 3 nodes (1 boot, 1 master, 1 agent)
 ### Setup boot node
 ```bash
 localectl set-locale LANG=en_US.utf8
+mkdir genconf
+
+cat > ./genconf/config.yaml <<EOF
+---
+cluster_name: dcos-contrail
+bootstrap_url: http://<boot-ip>
+exhibitor_storage_backend: static
+master_discovery: static
+master_list:
+- <master-ip>
+resolvers:
+- 8.8.8.8
+superuser_username: admin
+superuser_password_hash: "$6$rounds=656000$123o/Qz.InhbkbsO$kn5IkpWm5CplEorQo7jG/27LkyDgWrml36lLxDtckZkCxu22uihAJ4DOJVVnNbsz/Y5MCK3B1InquE6E7Jmh30"
+ssh_port: 22
+ssh_user: root
+agent_list:
+- <agent-ip1>
+- <agent-ip2>
+public_agent_list:
+- <public-agent-ip1>
+- <public-agent-ip2>
+check_time: false
+exhibitor_zk_hosts: <boot-ip>:2181
+EOF
+
+cat > ./genconf/ip-detect <<EOF
+#!/usr/bin/env bash
+set -o errexit
+set -o nounset
+set -o pipefail
+echo $(/usr/sbin/ip route show to match 192.168.65.90 | grep -Eo '[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}' | tail -1)
+EOF
+
+```
+
+Configure parameters in you genconf/config.yaml then run following:
+```bash
 curl -O https://downloads.dcos.io/dcos/stable/dcos_generate_config.sh 
 sudo bash dcos_generate_config.sh    
 sudo docker run -d -p 80:80 -v $PWD/genconf/serve:/usr/share/nginx/html:ro nginx

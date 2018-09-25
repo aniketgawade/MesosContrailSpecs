@@ -116,3 +116,14 @@ journalctl -u dcos-exhibitor -b
 journalctl -u dcos-mesos-dns -b
 journalctl -flu dcos-spartan
 ```
+
+## Contrail setup
+
+### Prereq:
+```bash
+yum install -y ansible-2.4.2.0 git vim
+git clone http://github.com/Juniper/contrail-ansible-deployer
+cd contrail-ansible-deployer
+
+```
+

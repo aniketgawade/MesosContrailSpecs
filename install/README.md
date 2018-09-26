@@ -168,3 +168,76 @@ EOF
 ansible-playbook -i inventory/ playbooks/configure_instances.yml
 ansible-playbook -i inventory/ playbooks/install_contrail.yml
 ```
+
+### Copy config file
+```bash
+1. Copy mesos cni to /opt/mesosphere/active/cni/ dir with name as "contrail-cni-plugin"
+
+2. Copy config
+cat > /opt/mesosphere/etc/dcos/network/cnicontrail-cni-plugin.conf <<EOF
+{
+    "cniVersion": "0.3.1",
+    "contrail" : {
+        "vrouter-ip"    : "<slave-ip>",
+        "vrouter-port"  : 9091,
+        "cluster-name"  : "<slave-hostname",
+        "config-dir"    : "/var/lib/contrail/ports/vm",
+        "poll-timeout"  : 15,
+        "poll-retries"  : 5,
+        "log-file"      : "/var/log/contrail/cni/opencontrail.log",
+        "log-level"     : "debug"
+    },
+
+    "name": "contrail-cni-plugin",
+    "type": "contrail-cni-plugin"
+}
+EOF
+
+3. Restart slave
+systemctl restart dcos-mesos-slave-public
+
+4. Run app on marathon in json mode
+{
+  "id": "/app-no-1",
+  "acceptedResourceRoles": [
+    "slave_public"
+  ],
+  "backoffFactor": 1.15,
+  "backoffSeconds": 1,
+  "container": {
+    "type": "MESOS",
+    "volumes": [],
+    "docker": {
+      "image": "ubuntu-upstart",
+      "forcePullImage": true,
+      "parameters": []
+    }
+  },
+  "cpus": 0.1,
+  "disk": 0,
+  "instances": 1,
+  "maxLaunchDelaySeconds": 3600,
+  "mem": 128,
+  "gpus": 0,
+  "networks": [
+    {
+      "name": "contrail-cni-plugin",
+      "mode": "container"
+    }
+  ],
+  "requirePorts": false,
+  "upgradeStrategy": {
+    "maximumOverCapacity": 1,
+    "minimumHealthCapacity": 1
+  },
+  "killSelection": "YOUNGEST_FIRST",
+  "unreachableStrategy": {
+    "inactiveAfterSeconds": 0,
+    "expungeAfterSeconds": 0
+  },
+  "healthChecks": [],
+  "fetch": [],
+  "constraints": []
+}
+
+```

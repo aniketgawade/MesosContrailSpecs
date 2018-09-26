@@ -124,6 +124,47 @@ journalctl -flu dcos-spartan
 yum install -y ansible-2.4.2.0 git vim
 git clone http://github.com/Juniper/contrail-ansible-deployer
 cd contrail-ansible-deployer
-
+ssh-copy-id <all-nodes>
 ```
 
+### Create config yaml
+
+```bash
+cat > config/instances.yaml <<EOF
+global_configuration:
+  CONTAINER_REGISTRY: ci-repo.englab.juniper.net:5000
+  REGISTRY_PRIVATE_INSECURE: true
+provider_config:
+  bms:
+    ssh_pwd: c0ntrail123
+    ssh_user: root
+    ntpserver: 10.84.5.100
+    domainsuffix: local
+instances:
+  bms1:
+    provider: bms
+    ip: <ip-address-master>
+    roles:
+        config_database:
+        config:
+        control:
+        analytics_database:
+        analytics:
+        webui:
+  bms2:
+    provider: bms
+    ip: <ip-address-agent>
+    roles:
+        vrouter:
+contrail_configuration:
+  CLOUD_ORCHESTRATOR: none
+  CONTRAIL_VERSION: queens-master-latest
+  RABBITMQ_NODE_PORT: 5673
+EOF
+```
+
+### Run contrail ansible
+``` bash
+ansible-playbook -i inventory/ playbooks/configure_instances.yml
+ansible-playbook -i inventory/ playbooks/install_contrail.yml
+```

@@ -174,7 +174,7 @@ ansible-playbook -i inventory/ playbooks/install_contrail.yml
 1. Copy mesos cni to /opt/mesosphere/active/cni/ dir with name as "contrail-cni-plugin"
 
 2. Copy config
-cat > /opt/mesosphere/etc/dcos/network/cnicontrail-cni-plugin.conf <<EOF
+cat > /opt/mesosphere/etc/dcos/network/cni/contrail-cni-plugin.conf <<EOF
 {
     "cniVersion": "0.3.1",
     "contrail" : {

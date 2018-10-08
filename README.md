@@ -114,6 +114,136 @@ You can also mention network.
 ```
 # 4. Implementation
 
+
+## Architecture Diagram
+
+```
++---------------------------------------------------+                +---------------------------------------------------+
+|                                                   |                |                                                   |
+|                                                   |                |                                                   |
+|                                                   |                |                                                   |
+|                                                   |                |                                                   |
+|  +---------------+            +---------------+   |                |                          +-------------------+    |
+|  |               | Updates    |               |   |                |                          |                   |    |
+|  |               | via VNCAPIs|               |   |                |                          |  Mesos Executor   |    |
+|  | Mesos Manager |            |    Contrail   |   |                |                          |                   |    |
+|  |               |            |   Controller  +------------------------+                      |                   |    |
+|  |               +----------> |               |   |                |   | Updates task IP      +--------+----------+    |
+|  |               |            |               |   |                |   | info to agent                 | Invokes CNI   |
+|  |               |            |               |   |                |   |                               | when task is  |
+|  |               |            |               |   |                |   |                               v spawned       |
+|  +------+--------+            +---------------+   |                |   |                                               |
+|         ^                                         |                |   |                      +-------------------+    |
+|         | Get task/pod                            |                |   |          Polls Agent |                   |    |
+|         | info from API/Events                    |                |   |          for task info       CNI         |    |
+|         |                                         |                |   |         +------------+                   |    |
+|  +------+--------+                                |                |   v         v            |                   |    |
+|  |               |                                |                |                          +-------------------+    |
+|  |               |                                |                |  +--------------+                                 |
+|  |               |                                |                |  |              |                                 |
+|  |   Marathon    |                                |                |  |Contrail Agent|       DCOS/Mesos slave          |
+|  |               |         DCOS/Mesos master      |                |  |              |       components are running    |
+|  |               |         components are running |                |  |              |                                 |
+|  |               |                                |                |  |              |                                 |
+|  |               |                                |                |  |              |                                 |
+|  +---------------+                                |                |  +------+-------+                                 |
+|                                                   |                |         | Updates routing         "Slave Node"    |
+|                                                   |                |         |                                         |
+|                                                   |                +---------v-----------------------------------------+
+|                                                   |                |                                                   |
+|                               "Master Node"       |                | vRouter kernel module                "Kernel"     |
+|                                                   |                |                                                   |
++---------------------------------------------------+                +---------------------------------------------------+
+
+```
+## Setup information : 
+Setup is done in two parts DCOS installation and contrail installation. For DCOS setup you can follow \
+this website : https://dcos.io/install/. For contrail installation follow : 
+https://github.com/Juniper/contrail-ansible-deployer make sure you fill out inventory file and set \
+orchestrator as mesos. 
+
+Master Node consist of :
++ DCOS master components (https://docs.mesosphere.com/1.11/overview/architecture/components/)
++ Contrail master (Controller, Analytics, Config, UI)
++ Mesos Master
+
+Slave/Agent Node consist of :
++ Contrail Agent
++ Contrail vRouter kernel module
++ Contrail CNI
++ DCOS slave components (https://docs.mesosphere.com/1.11/overview/architecture/components/)
+
+## Components : 
+
+### 4.1 Contrail controller
+Contrail controller is the brain of contrail which does the decision making. You will find \
+config management, analytics, UI and control place components for network virtualization. \
+You can find more information at https://github.com/Juniper/contrail-controller. Contrail expose \
+API for creating configuartion and updating virtual network components. In Mesos, mesos manager will \
+update all information regarding task (universal docker) to Contrail Contraoller via API server. 
+All Contrail controller components are micro service docker.
+
+### 4.2 Mesos Manager
+Mesos manager consist of two sub module :
+ a. VNC server 
+ b. Marathon API 
+
+```
+                           +----------------+
+                           |                |
+                           |                |
+                           |                |
+Interacts with             | Mesos Manager  |             Talks to Contrail VNC
+marathon API & <-----------+                +-----------> API server
+Server Side Events         |                |
+                           |                |
+                           |                |
+                           |                |
+                           |                |
+                           +----------------+
+
+```
+ Mesos manager app runs inside a docker on master. Mesos manager app when its started it first tries to connect to \
+ Marathon API server (master-ip:8080) and pulls all current running task. It parses only those tasks \
+ which are registered as network "contrail-cni-plugin" and status as "TASK_RUNNING".
+ More info on api at https://docs.mesosphere.com/1.11/deploying-services/marathon-api.
+ Once it has all tasks data it check against its VNC cached DB and updates/deleted task info which is stale.
+ 
+ ```
+     [
+      {
+        "id": "string",
+        "containers": [
+          {
+            "name": "string",
+            ....
+          }
+        ],
+        ....
+        "networks": [
+          {
+            "name": "contrail-cni-plugin",
+            "mode": "container",
+            "labels": {
+              "additionalProp1": "string",
+              "additionalProp2": "string",
+              "additionalProp3": "string"
+            }
+          }
+        ],
+        ...
+      }
+    ]
+ ```
+ Now it subscribe to Server Side Events from Marathon which is a event stream. More info at \
+ https://mesosphere.github.io/marathon/docs/event-bus.html. We should be only subscribe to \
+ status_update_event for task and specifically checking on taskStatus with "TASK_RUNNING", \
+ "TASK_FINISHED", "TASK_FAILED", "TASK_KILLED" and for pods it would be pod_created_event, \
+ pod_updated_event, pod_deleted_event. Filtering and subscribtion works as follow: 
+ ```
+ curl -H "Accept: text/event-stream"  <MARATHON_HOST>:<MARATHON_PORT>/v2/events?event_type=status_update_event\&event_type=pod_created_event\&event_type=pod_updated_event\&event_type=pod_deleted_event
+ ```
+
 ### 4.1 Contrail CNI
 Mesos agent would invoke Contrail CNI when custom/host network provider is mentioned in the task
 description. CNI would parse all argument provided and pass required info to contrail's mesos manager.
@@ -121,11 +251,6 @@ CNI would then poll contrail agent for IP address and mac info and create a tap 
 Loction is CNI is /opt/mesosphere/active/cni/contrail-cni-plugin and config is
 /opt/mesosphere/etc/dcos/network/cni/contrail-cni-plugin.conf
 
-### 4.2 Mesos Manager
-Mesos manager would receive information from CNI on port 8080 regarding task/pod and accordingly
-process information and inform Contrail using APIs to Contrail controller. Information includes
-network in which task/pod should be assigned, allocate a public IP/floating IP and security group
-to be assigned to. Mesos manager is running as a distributed application on Docker on each slave.
 
 ### 4.3 DNS and load balancer
 Mesos DNS and Mesos marathon lb would running as part of Contrail network so that resolved IP

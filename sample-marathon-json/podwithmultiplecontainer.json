@@ -1,0 +1,62 @@
+{
+  "id": "/pod-multi",
+    "acceptedResourceRoles": [
+    "slave_public"
+  ],
+  "containers": [
+    {
+      "name": "sleep1",
+      "resources": {
+        "cpus": 0.1,
+        "mem": 32,
+        "disk": 0
+      },
+      "exec": {
+        "command": {
+          "shell": "sleep 1000"
+        }
+      }
+    },
+    {
+      "name": "sleep2",
+      "resources": {
+        "cpus": 0.1,
+        "mem": 32,
+        "disk": 0
+      },
+      "exec": {
+        "command": {
+          "shell": "sleep 1000"
+        }
+      }
+    }
+  ],
+  "networks": [
+    {
+      "name": "bridge",
+      "mode": "container",
+      "labels": {
+      "networks": "blue-network",
+      "project-name": "default-project",
+      "domain-name": "default-domain",
+      "floating-ips": "default-domain:default-project:__public__:__fip_pool_public__(10.66.77.123),default-domain:default-project:__public__:__fip_pool_public2__(10.33.44.11)"
+    }
+    }
+  ],
+  "scaling": {
+    "instances": 2,
+    "kind": "fixed"
+  },
+  "scheduling": {
+    "placement": {
+      "constraints": []
+    }
+  },
+  "executorResources": {
+    "cpus": 0.1,
+    "mem": 32,
+    "disk": 10
+  },
+  "volumes": [],
+  "fetch": []
+}

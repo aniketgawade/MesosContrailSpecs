@@ -157,6 +157,7 @@ You can also mention network.
 
 ```
 ## Setup information : 
+
 Setup is done in two parts DCOS installation and contrail installation. For DCOS setup you can follow \
 this website : https://dcos.io/install/. For contrail installation follow : 
 https://github.com/Juniper/contrail-ansible-deployer make sure you fill out inventory file and set \
@@ -175,7 +176,8 @@ Slave/Agent Node consist of :
 
 ## Components : 
 
-### 4.1 Contrail controller
+### 4.1 Contrail controller :
+
 Contrail controller is the brain of contrail which does the decision making. You will find \
 config management, analytics, UI and control place components for network virtualization. \
 You can find more information at https://github.com/Juniper/contrail-controller. Contrail expose \
@@ -183,7 +185,8 @@ API for creating configuartion and updating virtual network components. In Mesos
 update all information regarding task (universal docker) to Contrail Contraoller via API server. 
 All Contrail controller components are micro service docker.
 
-### 4.2 Mesos Manager
+### 4.2 Mesos Manager :
+
 Mesos manager consist of two sub module :
  a. VNC server 
  b. Marathon API 
@@ -203,7 +206,7 @@ Server Side Events         |                |
                            +----------------+
 
 ```
- Mesos manager app runs inside a docker on master. Mesos manager app when its started it first tries to connect to \
+ Mesos manager app runs inside a docker on master. Mesos manager app when started it first tries to connect to \
  Marathon API server (master-ip:8080) and pulls all current running task. It parses only those tasks \
  which are registered as network "contrail-cni-plugin" and status as "TASK_RUNNING".
  More info on api at https://docs.mesosphere.com/1.11/deploying-services/marathon-api.
@@ -231,31 +234,126 @@ Server Side Events         |                |
             }
           }
         ],
+        "state":"TASK_RUNNING",
         ...
+        "ipAddresses":[  
+            {  
+               "ipAddress":"172.17.0.3",
+               "protocol":"IPv4"
+            }
+         ],
       }
     ]
  ```
  Now it subscribe to Server Side Events from Marathon which is a event stream. More info at \
  https://mesosphere.github.io/marathon/docs/event-bus.html. We should be only subscribe to \
  status_update_event for task and specifically checking on taskStatus with "TASK_RUNNING", \
- "TASK_FINISHED", "TASK_FAILED", "TASK_KILLED" and for pods it would be pod_created_event, \
- pod_updated_event, pod_deleted_event. Filtering and subscribtion works as follow: 
+ "TASK_FINISHED", "TASK_FAILED", "TASK_KILLED" and for pods it would be instance_changed_event \
+ condition as "Created" or "Failed" . Filtering and subscribtion works as follow: 
  ```
- curl -H "Accept: text/event-stream"  <MARATHON_HOST>:<MARATHON_PORT>/v2/events?event_type=status_update_event\&event_type=pod_created_event\&event_type=pod_updated_event\&event_type=pod_deleted_event
+ curl -H "Accept: text/event-stream"  <MARATHON_HOST>:<MARATHON_PORT>/v2/events?event_type=status_update_event\&event_type=instance_changed_event
  ```
+ 
+ Sample events:
+ ```
+ event: status_update_event
+data: {"slaveId":"2275bb07-f40c-4d1e-884a-3d1332aed113-S4","taskId":"pod-with-virtual-network.instance-f575f481-caa6-11e8-a129-70b3d5800001.sleep1","taskStatus":"TASK_KILLING","message":"","appId":"/pod-with-virtual-network","host":"192.168.65.111","ipAddresses":[{"ipAddress":"9.0.1.3","protocol":"IPv4"}],"ports":[],"version":"2018-10-08T03:05:06.521Z","eventType":"status_update_event","timestamp":"2018-10-08T03:09:57.000Z"}
 
-### 4.1 Contrail CNI
-Mesos agent would invoke Contrail CNI when custom/host network provider is mentioned in the task
-description. CNI would parse all argument provided and pass required info to contrail's mesos manager.
-CNI would then poll contrail agent for IP address and mac info and create a tap interface in container.
+ event: instance_changed_event
+ data: {"instanceId":"pod-multi.instance-a5f2bd75-caaa-11e8-a129-70b3d5800001","condition":"Created","runSpecId":"/pod- multi","agentId":"2275bb07-f40c-4d1e-884a-3d1332aed113-S4","host":"192.168.65.111","runSpecVersion":"2018-10-08T03:31:31.171Z","timestamp":"2018-10-08T03:31:31.222Z","eventType":"instance_changed_event"}
+
+ event: instance_changed_event
+ data: {"instanceId":"pod-multi.instance-a5f2bd75-caaa-11e8-a129-70b3d5800001","condition":"Failed","runSpecId":"/pod-multi","agentId":"2275bb07-f40c-4d1e-884a-3d1332aed113-S4","host":"192.168.65.111","runSpecVersion":"2018-10-08T03:31:31.171Z","timestamp":"2018-10-08T03:31:31.438Z","eventType":"instance_changed_event"}
+```
+
+### 4.3 Contrail CNI
 Loction is CNI is /opt/mesosphere/active/cni/contrail-cni-plugin and config is
 /opt/mesosphere/etc/dcos/network/cni/contrail-cni-plugin.conf
 
+Config file:
+```conf
+{
+    "cniVersion": "0.3.1",
+    "contrail" : {
+        "vrouter-ip"    : "<slave-ip>",
+        "vrouter-port"  : 9091,
+        "cluster-name"  : "<slave-hostname>",
+        "config-dir"    : "/var/lib/contrail/ports/vm",
+        "poll-timeout"  : 15,
+        "poll-retries"  : 5,
+        "log-file"      : "/var/log/contrail/cni/opencontrail.log",
+        "log-level"     : "debug"
+    },
 
-### 4.3 DNS and load balancer
-Mesos DNS and Mesos marathon lb would running as part of Contrail network so that resolved IP
-address can be reached out via Contrail vRouter. Minuteman, spartan, Mesos DNS and Navstar should
-would be configured to make them working.
+    "name": "contrail-cni-plugin",
+    "type": "contrail-cni-plugin"
+}
+```
+
+Mesos agent would invoke Contrail CNI when custom/host network provider is mentioned in the task
+description. Where network provider is mentioned as "contrail-cni-plugin". CNI would then poll \
+contrail agent for IP address and mac info and create a tap interface in container.
+Example : http://{slave-ip}:9091/vm-cfg/660a305f-10e4-47fd-a5fc-50e48147423b
+
+
+Sample Task information updated to CNI :
+```
+{"args":{"org.apache.mesos":{"network_info":{"ip_addresses":[{"protocol":"IPv4"}],"labels":{"labels":[{"key":"networks","value":"blue-network"},{"key":"network-subnets","value":"5.5.5.0\/24"},{"key":"project-name","value":"default"},{"key":"domain-name","value":"default-domain"}]},"name":"contrail-cni-plugin"}}},"cniVersion":"0.2.0","contrail":{"cluster-name":"b2s27","config-dir":"\/var\/lib\/contrail\/ports\/vm","log-file":"\/var\/log\/contrail\/cni\/opencontrail.log","log-level":"info","poll-retries":5,"poll-timeout":15,"vrouter-ip":"10.84.22.27","vrouter-port":9091},"name":"contrail-cni-plugin","type":"contrail-cni-plugin"}
+```
+
+
+### 4.3 DNS and Load balancer
+
+In DCOS Minuteman acts as a layer 4 load balancer. It maps single virtual IP to multiple port and address.
+It can be a name instead of IP address and its created automatically when service is installed.
+
+VIPs follow this naming convention:
+
+<service-name>.marathon.l4lb.thisdcos.directory:<port>
+ 
+You can specify VIP in your task creation:
+```
+    "portDefinitions": [
+        {
+            "port": 0,
+            "protocol": "tcp",
+            "name": "http",
+            "labels": {"VIP_0": "10.0.0.1:80"}
+        }
+    ],
+    
+    and 
+        "portDefinitions": [
+        {
+            "port": 0,
+            "protocol": "tcp",
+            "name": "http",
+            "labels": {"VIP_0": "/my-service:80"}
+        }
+    ],
+```
+This will automatically create DNS and IPVS entry for routing.
+https://docs.mesosphere.com/1.11/networking/load-balancing-vips/
+
+
+Mesos/DCOS can also use Marathon LB as loadbalancer. It can be configured either internal or external.
+External or internal could be differentiated using labels in task configuration. You can set both.
+External loadbalancer should be configured on public node.
+More info : https://docs.mesosphere.com/services/marathon-lb/
+
+```
+  "labels":{
+    "HAPROXY_GROUP":"internal"
+  }
+  or
+    "labels":{
+    "HAPROXY_GROUP":"external"
+  }
+  or
+    "labels":{
+    "HAPROXY_GROUP":"external,internal"
+  }
+```
 
 # 5. Performance and scaling impact
 Nothing so far.

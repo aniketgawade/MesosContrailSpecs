@@ -159,8 +159,9 @@ You can also mention network.
 ## Setup information : 
 
 Setup is done in two parts DCOS installation and contrail installation. For DCOS setup you can follow \
-this website : https://dcos.io/install/. For contrail installation follow : 
-https://github.com/Juniper/contrail-ansible-deployer make sure you fill out inventory file and set \
+this website : https://dcos.io/install/. 
+For contrail installation follow : 
+https://github.com/Juniper/contrail-ansible-deployer. Make sure you fill out inventory file and set \
 orchestrator as mesos. 
 
 Master Node consist of :
@@ -179,7 +180,7 @@ Slave/Agent Node consist of :
 ### 4.1 Contrail controller :
 
 Contrail controller is the brain of contrail which does the decision making. You will find \
-config management, analytics, UI and control place components for network virtualization. \
+config management, analytics, UI and control plane components for network virtualization. \
 You can find more information at https://github.com/Juniper/contrail-controller. Contrail expose \
 API for creating configuartion and updating virtual network components. In Mesos, mesos manager will \
 update all information regarding task (universal docker) to Contrail Contraoller via API server. 
@@ -188,7 +189,9 @@ All Contrail controller components are micro service docker.
 ### 4.2 Mesos Manager :
 
 Mesos manager consist of two sub module :
+
  a. VNC server 
+ 
  b. Marathon API 
 
 ```
@@ -245,11 +248,11 @@ Server Side Events         |                |
       }
     ]
  ```
- Now it subscribe to Server Side Events from Marathon which is a event stream. More info at \
- https://mesosphere.github.io/marathon/docs/event-bus.html. We should be only subscribe to \
- status_update_event for task and specifically checking on taskStatus with "TASK_RUNNING", \
- "TASK_FINISHED", "TASK_FAILED", "TASK_KILLED" and for pods it would be instance_changed_event \
- condition as "Created" or "Failed" . Filtering and subscribtion works as follow: 
+ Now mesos manager subscribe to Server Side Events from Marathon which is real time event stream. 
+ More info at https://mesosphere.github.io/marathon/docs/event-bus.html. It subscribes to \
+ status_update_event for task where taskStatus is "TASK_RUNNING", "TASK_FINISHED", "TASK_FAILED" or\
+ "TASK_KILLED". For pods it subscribes to  instance_changed_event and check condition as "Created" or "Failed" .
+ Filtering and subscribtion works as follow: 
  ```
  curl -H "Accept: text/event-stream"  <MARATHON_HOST>:<MARATHON_PORT>/v2/events?event_type=status_update_event\&event_type=instance_changed_event
  ```
@@ -267,10 +270,10 @@ data: {"slaveId":"2275bb07-f40c-4d1e-884a-3d1332aed113-S4","taskId":"pod-with-vi
 ```
 
 ### 4.3 Contrail CNI
-Loction is CNI is /opt/mesosphere/active/cni/contrail-cni-plugin and config is
-/opt/mesosphere/etc/dcos/network/cni/contrail-cni-plugin.conf
+Loction is CNI is /opt/mesosphere/active/cni/contrail-cni-plugin it a run to completion executable.
+Config is located at /opt/mesosphere/etc/dcos/network/cni/contrail-cni-plugin.conf
 
-Config file:
+Sample config file:
 ```conf
 {
     "cniVersion": "0.3.1",

@@ -354,6 +354,23 @@ More info : https://docs.mesosphere.com/services/marathon-lb/
     "HAPROXY_GROUP":"external,internal"
   }
 ```
+## Minor Components : 
+
+### Logging :
+Existing common/logger.py code would be used for logging.
+
+### HA Setup :
+Contrail can be configured as HA and one of the mesos manager would be elected as master and will connect to
+marathon API server, which can also be provided as a list. Mesos manager will traverse list and gets connected to 
+one of the API server. This is still not commited for 5.1.
+
+### VNC cache :
+Local vnc cache would be maintained inside mesos manager. So in case of restart Mesos will resync from VNC DB.
+Also before query to VNC API all calls would first query local cache and then connect to VNC API server.
+
+### Windows support :
+Windows support is not commited for 5.1.
+
 
 # 5. Performance and scaling impact
 Nothing so far.

@@ -2,26 +2,27 @@
 
 ### High prio (Needed ones)
 
-- [ ] Marathon API server listener(centralized) - 6 days 
-  *  Marathon API server query
-  *  Event server subscription  
-- [ ] Creating task in virtual network. - 4 days
-  *  Processing events from listner
-  *  Creating equivalent contrail objects
-- [ ] Similar to task do it for pod - 3 days
-- [ ] Floating ip support - 2 days
-- [ ] Creating local vnc cache - 3 days
-- [ ] Add mesos manager to container deployer - 1 day 
-- [ ] Add mesos CNI node init to container deployer - 1 day 
-- [ ] Ansible deployment (set mesos as orchestrator) - 2 days
-- [ ] Load Balancer and DNS working - 3 days
+- [ ] Skeleton Framework code for modules
+- [ ] Marathon API server listener(centralized)
+   *  Marathon API server query
+   *  Event server subscription  
+- [ ] Creating task in virtual network.
+   *  Processing events from listner
+   *  Creating equivalent contrail objects
+- [ ] Similar to task do it for pod 
+- [ ] Floating ip support
+- [ ] Creating local vnc cache
+- [ ] Add mesos manager to container deployer
+- [ ] Add mesos CNI node init to container deployer 
+- [ ] Ansible deployment (set mesos as orchestrator)
+- [ ] Load Balancer and DNS working
 
 
 ### Low prio 
 
-- [ ] Sandesh infra - 2 days
-- [ ] Introspect - 2 days 
-- [ ] HA infra - 3 days
-- [ ] Test infrastructure - 10 days
-- [ ] Documentation - 3 days
-- [ ] Mesosphere Universal Packaging - 3 days
+- [ ] Sandesh infra
+- [ ] Introspect
+- [ ] HA infra
+- [ ] Test infrastructure 
+- [ ] Documentation
+- [ ] Mesosphere Universal Packaging

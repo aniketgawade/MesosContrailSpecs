@@ -600,8 +600,8 @@ Configure parameters in you genconf/config.yaml then run following:
 ```bash
 Tested:
 wget https://downloads.dcos.io/dcos/stable/1.11.0/dcos_generate_config.sh
-//Latest: curl -O https://downloads.dcos.io/dcos/stable/dcos_generate_config.sh 
-sudo bash dcos_generate_config.sh    
+//Latest: curl -O https://downloads.dcos.io/dcos/stable/dcos_generate_config.sh
+sudo bash dcos_generate_config.sh
 sudo docker run -d -p 80:80 -v $PWD/genconf/serve:/usr/share/nginx/html:ro nginx
 ```
 
@@ -637,7 +637,7 @@ chmod +x run.sh
 
 ### Setup master
 
-```bash 
+```bash
 mkdir /tmp/dcos && cd /tmp/dcos
 curl -O http://<boot_ip>:80/dcos_install.sh
 sudo bash dcos_install.sh master
@@ -646,14 +646,14 @@ sudo bash dcos_install.sh master
 ### Setup node/agent
 
 Public Agent
-```bash 
+```bash
 mkdir /tmp/dcos && cd /tmp/dcos
 curl -O http://<boot_ip>:80/dcos_install.sh
 sudo bash dcos_install.sh slave_public
 ```
 
 Private Agent
-```bash 
+```bash
 mkdir /tmp/dcos && cd /tmp/dcos
 curl -O http://<boot_ip>:80/dcos_install.sh
 sudo bash dcos_install.sh slave
@@ -727,4 +727,5 @@ ansible-playbook -i inventory/ playbooks/install_contrail.yml
 ```
 Note: You can specify orchestrator as Mesos in instance.yaml or run in ansible-playbook as -e orchestrator=kubernetes
 
-# 12. References
+# 12. Documentation Impact
+# 13. References

@@ -221,8 +221,8 @@ would get the task info and post it to mesos manager.
 
 Mesos manager then creates all vnc object such as vm, vmi, floating-ip, instance-ip, link to vrouter  as per the task
 information provided. Once task is up and running. Mesos manager will poll agent api port 5051 to map container id to
-task name and accordingly updates display mane of vm object.
-Mesos manager will sync current task running and check against it own record and remove stale 
+task name and accordingly updates display name of vm object.
+Mesos manager will sync current task running and check against its own record and remove stale 
 entries. It will do the same at a periodic timer mentioned. It will check task name against container id and zombie records
 will be removed.
 

@@ -42,7 +42,7 @@ cat > ./genconf/ip-detect <<EOF
 set -o errexit
 set -o nounset
 set -o pipefail
-echo $(/usr/sbin/ip route show to match 192.168.65.90 | grep -Eo '[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}' | tail -1)
+echo $(/usr/sbin/ip route show to match <master-ip> | grep -Eo '[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}' | tail -1)
 EOF
 
 ```
